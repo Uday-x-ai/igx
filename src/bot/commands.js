@@ -406,7 +406,7 @@ async function isUserInRequiredChannel(bot, telegramId) {
   }
 
   const parseChannelUsernameFromLink = (value) => {
-    const tMeMatch = String(value || "").trim().match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
+    const tMeMatch = String(value || "").trim().match(/^https?:\/\/t\.me\/([A-Za-z0-9_]{5,32})\/?$/i);
     if (!tMeMatch) {
       return null;
     }
@@ -428,7 +428,7 @@ async function isUserInRequiredChannel(bot, telegramId) {
     }
   }
 
-  const uniqueCandidates = [...new Set(channelCandidates.filter(Boolean))];
+  const uniqueCandidates = [...new Set(channelCandidates)];
 
   for (const candidate of uniqueCandidates) {
     try {
