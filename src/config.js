@@ -13,7 +13,7 @@ const adminIds = (process.env.ADMIN_TELEGRAM_IDS || "")
   .filter(Boolean)
   .map((v) => Number(v));
 
-const requiredChannelRaw = process.env.REQUIRED_CHANNEL_ID || process.env.REQUIRED_CHANNEL || "";
+const requiredChannelRaw = (process.env.REQUIRED_CHANNEL_ID || process.env.REQUIRED_CHANNEL || "").trim();
 const requiredChannel = /^-?\d+$/.test(requiredChannelRaw) ? Number(requiredChannelRaw) : requiredChannelRaw;
 
 module.exports = {
