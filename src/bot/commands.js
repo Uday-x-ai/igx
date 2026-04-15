@@ -405,11 +405,39 @@ async function isUserInRequiredChannel(bot, telegramId) {
     return true;
   }
 
+  const channelCandidates = [requiredChannel];
+  if (typeof requiredChannel === "string") {
+    const trimmed = requiredChannel.trim();
+    const tMeMatch = trimmed.match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
+    if (tMeMatch) {
+      channelCandidates.push(`@${tMeMatch[1]}`);
+    }
+  }
+
+  if (requiredChannelLink && typeof requiredChannelLink === "string") {
+    const trimmedLink = requiredChannelLink.trim();
+    const tMeMatch = trimmedLink.match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
+    if (tMeMatch) {
+      channelCandidates.push(`@${tMeMatch[1]}`);
+    }
+  }
+
+  const uniqueCandidates = [...new Set(channelCandidates.filter(Boolean))];
+
   try {
-    const member = await bot.getChatMember(requiredChannel, telegramId);
-    const allowed = ["creator", "administrator", "member", "restricted"];
-    return allowed.includes(member.status);
-  } catch (err) {
+    for (const candidate of uniqueCandidates) {
+      try {
+        const member = await bot.getChatMember(candidate, telegramId);
+        const allowed = ["creator", "administrator", "member", "restricted"];
+        if (allowed.includes(member.status)) {
+          return true;
+        }
+      } catch (err) {
+        continue;
+      }
+    }
+    return false;
+  } catch (_err) {
     return false;
   }
 }
@@ -578,7 +606,7 @@ async function onRedeem(bot, msg) {
   if (!inChannel) {
     const joinText = requiredChannelLink
       ? `Please join our channel first to redeem balance: ${requiredChannelLink}`
-      : "Please join our channel first to redeem balance.";
+      : "Please join our channel first to redeem balance. For private channels, set REQUIRED_CHANNEL_ID to the numeric channel ID and add the bot to that channel.";
 
     const options = requiredChannelLink
       ? {
