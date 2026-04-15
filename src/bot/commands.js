@@ -405,41 +405,43 @@ async function isUserInRequiredChannel(bot, telegramId) {
     return true;
   }
 
+  const parseChannelUsernameFromLink = (value) => {
+    const tMeMatch = String(value || "").trim().match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
+    if (!tMeMatch) {
+      return null;
+    }
+    return `@${tMeMatch[1]}`;
+  };
+
   const channelCandidates = [requiredChannel];
   if (typeof requiredChannel === "string") {
-    const trimmed = requiredChannel.trim();
-    const tMeMatch = trimmed.match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
-    if (tMeMatch) {
-      channelCandidates.push(`@${tMeMatch[1]}`);
+    const usernameFromRequiredChannel = parseChannelUsernameFromLink(requiredChannel);
+    if (usernameFromRequiredChannel) {
+      channelCandidates.push(usernameFromRequiredChannel);
     }
   }
 
   if (requiredChannelLink && typeof requiredChannelLink === "string") {
-    const trimmedLink = requiredChannelLink.trim();
-    const tMeMatch = trimmedLink.match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/?$/i);
-    if (tMeMatch) {
-      channelCandidates.push(`@${tMeMatch[1]}`);
+    const usernameFromLink = parseChannelUsernameFromLink(requiredChannelLink);
+    if (usernameFromLink) {
+      channelCandidates.push(usernameFromLink);
     }
   }
 
   const uniqueCandidates = [...new Set(channelCandidates.filter(Boolean))];
 
-  try {
-    for (const candidate of uniqueCandidates) {
-      try {
-        const member = await bot.getChatMember(candidate, telegramId);
-        const allowed = ["creator", "administrator", "member", "restricted"];
-        if (allowed.includes(member.status)) {
-          return true;
-        }
-      } catch (err) {
-        continue;
+  for (const candidate of uniqueCandidates) {
+    try {
+      const member = await bot.getChatMember(candidate, telegramId);
+      const allowed = ["creator", "administrator", "member", "restricted"];
+      if (allowed.includes(member.status)) {
+        return true;
       }
+    } catch (_err) {
+      continue;
     }
-    return false;
-  } catch (_err) {
-    return false;
   }
+  return false;
 }
 
 async function onStart(bot, msg) {
